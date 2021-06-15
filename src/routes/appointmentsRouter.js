@@ -5,6 +5,8 @@ import CreateAppointmentService from "../services/CreateAppointmentService";
 import DeleteAppointmentService from "../services/DeleteAppointmentService";
 import UpdateAppointmentService from "../services/UpdateAppointmentService";
 
+import axios from "axios";
+
 const appointmentsRouter = Router();
 
 appointmentsRouter.get("/", async (req, res) => {
@@ -23,6 +25,18 @@ appointmentsRouter.post("/", async (req, res) => {
   try {
     const { patient_id, doctor_id, appointmentDate } = req.body;
     const CreateAppointment = new CreateAppointmentService();
+
+    const patient = await axios.get(
+      `http://localhost:3002/patients/${patient_id}`
+    );
+    console.log(patient);
+    if (!patient) return res.json("Patient do not exists!");
+
+    const doctor = await axios.get(
+      `http://localhost:8080/doctors/${doctor_id}`
+    );
+    if (!doctor) return res.json("Doctor do not exists!");
+
     const appointment = CreateAppointment.execute(
       patient_id,
       doctor_id,
