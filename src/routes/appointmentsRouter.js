@@ -1,13 +1,16 @@
+require('dotenv').config();
 import { Router } from "express";
+import axios from "axios";
 
 import Appointment from "../schemas/Appointment";
 import CreateAppointmentService from "../services/CreateAppointmentService";
 import DeleteAppointmentService from "../services/DeleteAppointmentService";
 import UpdateAppointmentService from "../services/UpdateAppointmentService";
 
-import axios from "axios";
-
 const appointmentsRouter = Router();
+
+const doctorsMsPort = process.env.DOCTORS_MS_PORT;
+const patientsMsPort = process.env.PATIENTS_MS_PORT;
 
 appointmentsRouter.get("/", async (req, res) => {
   try {
@@ -27,25 +30,26 @@ appointmentsRouter.post("/", async (req, res) => {
     const CreateAppointment = new CreateAppointmentService();
 
     const patient = await axios.get(
-      `http://localhost:3002/patients/${patient_id}`
+      `http://localhost:${patientsMsPort}/api/patients/${patient_id}`
     );
-    console.log(patient);
     if (!patient) return res.json("Patient do not exists!");
 
     const doctor = await axios.get(
-      `http://localhost:8080/doctors/${doctor_id}`
+      `http://localhost:${doctorsMsPort}/api/doctors/${doctor_id}`
     );
     if (!doctor) return res.json("Doctor do not exists!");
 
-    const appointment = CreateAppointment.execute(
+    const appointment = await CreateAppointment.execute(
       patient_id,
+      patient.data.nome,
       doctor_id,
+      doctor.data.doctor.doctor,
       appointmentDate
     );
 
     return res.json(appointment);
   } catch (err) {
-    return res.status(err.statusCode).json({ error: err.message });
+    return res.status(400).json({error: err.message});
   }
 });
 
